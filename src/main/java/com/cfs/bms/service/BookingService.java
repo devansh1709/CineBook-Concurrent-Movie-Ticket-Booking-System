@@ -1,5 +1,8 @@
 package com.cfs.bms.service;
 import com.cfs.bms.dto.*;
+import com.cfs.bms.enums.BookingStatus;
+import com.cfs.bms.enums.PaymentStatus;
+import com.cfs.bms.enums.SeatStatus;
 import com.cfs.bms.exception.ResourceNotFoundException;
 import com.cfs.bms.exception.SeatUnavailableException;
 import com.cfs.bms.model.*;
@@ -7,11 +10,11 @@ import com.cfs.bms.repository.BookingRepository;
 import com.cfs.bms.repository.ShowRepository;
 import com.cfs.bms.repository.ShowSeatRepository;
 import com.cfs.bms.repository.UserRepository;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.beans.Transient;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -40,26 +43,26 @@ public class BookingService {
         Show show=showRepository.findById(bookingRequest.getShowId())
                 .orElseThrow(()->new ResourceNotFoundException("Show Not Found"));
 
-        List<ShowSeat> selectedSeats=showSeatRepository.findAllById(bookingRequest.getSeatIds());
+        List<ShowSeat> selectedSeats=showSeatRepository.findSeatsForBooking(bookingRequest.getSeatIds());
 
         for(ShowSeat seat: selectedSeats){
-            if(!"AVAILABLE".equals(seat.getStatus())){
+            if(seat.getStatus() != SeatStatus.AVAILABLE){
                 throw new SeatUnavailableException("Seat "+ seat.getSeat().getSeatNumber()+" is not available");
             }
-            seat.setStatus("LOCKED");
+            seat.setStatus(SeatStatus.LOCKED);
         }
         showSeatRepository.saveAll(selectedSeats);
 
-        Double totalAmount=selectedSeats.stream()
-                .mapToDouble(ShowSeat::getPrice)
-                .sum();
+        BigDecimal totalAmount=selectedSeats.stream()
+                .map(ShowSeat::getPrice)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         //payment
         Payment payment=new Payment();
         payment.setAmount(totalAmount);
         payment.setPaymentTime(LocalDateTime.now());
         payment.setPaymentMethod(bookingRequest.getPaymentMethod());
-        payment.setStatus("SUCCESS");
+        payment.setStatus(PaymentStatus.SUCCESS);
         payment.setTransactionId(UUID.randomUUID().toString());
 
         //booking
@@ -67,7 +70,7 @@ public class BookingService {
         booking.setUser(user);
         booking.setShow(show);
         booking.setBookingTime(LocalDateTime.now());
-        booking.setStatus("CONFIRMED");
+        booking.setStatus(BookingStatus.CONFIRMED);
         booking.setTotalAmount(totalAmount);
         booking.setBookingNumber(UUID.randomUUID().toString());
         booking.setPayment(payment);
@@ -75,7 +78,7 @@ public class BookingService {
         Booking saveBooking=bookingRepository.save(booking);
 
         selectedSeats.forEach(seat->{
-            seat.setStatus("BOOKED");
+            seat.setStatus(SeatStatus.BOOKED);
             seat.setBooking(saveBooking);
         });
         showSeatRepository.saveAll(selectedSeats);
@@ -86,20 +89,14 @@ public class BookingService {
     public BookingDto getBookingById(Long id){
         Booking booking=bookingRepository.findById(id)
                 .orElseThrow(()->new ResourceNotFoundException("Booking Not Found"));
-        List<ShowSeat> seats=showSeatRepository.findAll()
-                .stream()
-                .filter(seat->seat.getBooking()!=null && seat.getBooking().getId().equals(booking.getId()))
-                .collect(Collectors.toList());
+        List<ShowSeat> seats = showSeatRepository.findByBookingId(booking.getId());
         return mapToBookingDto(booking,seats);
     }
 
     private BookingDto getBookingByNumber(String bookingNumber){
         Booking booking=bookingRepository.findByBookingNumber(bookingNumber)
                 .orElseThrow(()->new ResourceNotFoundException("Booking Not Found"));
-        List<ShowSeat> seats=showSeatRepository.findAll()
-                .stream()
-                .filter(seat->seat.getBooking()!=null && seat.getBooking().getId().equals(booking.getId()))
-                .collect(Collectors.toList());
+        List<ShowSeat> seats = showSeatRepository.findByBookingId(booking.getId());
         return mapToBookingDto(booking,seats);
     }
 
@@ -108,10 +105,9 @@ public class BookingService {
         List<Booking> bookings = bookingRepository.findByUserId(userId);
         return bookings.stream()
                 .map(booking -> {
-                    List<ShowSeat> seats=showSeatRepository.findAll()
-                            .stream().
-                            filter(seat->seat.getBooking()!=null && seat.getBooking().getId().equals(booking.getId()))
-                            .collect(Collectors.toList());
+                    List<ShowSeat> seats =
+                            showSeatRepository.findByBookingId(booking.getId());
+
                     return mapToBookingDto(booking,seats);
                 })
                 .collect(Collectors.toList());
@@ -124,21 +120,18 @@ public class BookingService {
         Booking booking=bookingRepository.findById(id)
                 .orElseThrow(()->new ResourceNotFoundException("Booking Not found"));
 
-        booking.setStatus("CANCELLED");
+        booking.setStatus(BookingStatus.CANCELLED);
 
-        List<ShowSeat> seats=showSeatRepository.findAll()
-                .stream()
-                .filter(seat->seat.getBooking()!=null && seat.getBooking().getId().equals(booking.getId()))
-                .collect(Collectors.toList());
+        List<ShowSeat> seats = showSeatRepository.findByBookingId(booking.getId());
 
         seats.forEach(seat->{
-            seat.setStatus("AVAILABLE");
+            seat.setStatus(SeatStatus.AVAILABLE);
             seat.setBooking(null);
         });
 
         if (booking.getPayment()!=null)
         {
-            booking.getPayment().setStatus("REFUNDED");
+            booking.getPayment().setStatus(PaymentStatus.REFUNDED);
         }
 
         Booking updateBooking=bookingRepository.save(booking);

@@ -1,6 +1,7 @@
 package com.cfs.bms.service;
 
 import com.cfs.bms.dto.*;
+import com.cfs.bms.enums.SeatStatus;
 import com.cfs.bms.exception.ResourceNotFoundException;
 import com.cfs.bms.model.Movie;
 import com.cfs.bms.model.Screen;
@@ -49,7 +50,7 @@ public class ShowService {
         Show savedShow=showRepository.save(show);
 
         List<ShowSeat> availableSeats=
-                showSeatRepository.findByShowIdAndStatus(savedShow.getId(),"AVAILABLE");
+                showSeatRepository.findByShowIdAndStatus(savedShow.getId(), SeatStatus.AVAILABLE);
         return mapToDto(savedShow,availableSeats);
     }
 
@@ -58,7 +59,7 @@ public class ShowService {
         Show show=showRepository.findById(id)
                 .orElseThrow(()->new ResourceNotFoundException("Show not found  with id: "+id));
         List<ShowSeat> availableSeats=
-                showSeatRepository.findByShowIdAndStatus(show.getId(),"AVAILABLE");
+                showSeatRepository.findByShowIdAndStatus(show.getId(),SeatStatus.AVAILABLE);
         return mapToDto(show,availableSeats);
     }
 
@@ -67,7 +68,7 @@ public class ShowService {
         List<Show> shows=showRepository.findAll();
         return shows.stream()
                 .map(show -> {
-                    List<ShowSeat> availableSeats = showSeatRepository.findByShowIdAndStatus(show.getId(), "AVAILABLE");
+                    List<ShowSeat> availableSeats = showSeatRepository.findByShowIdAndStatus(show.getId(), SeatStatus.AVAILABLE);
                     return mapToDto(show,availableSeats);
                 })
                 .collect(Collectors.toList());
@@ -78,7 +79,7 @@ public class ShowService {
         List<Show> shows=showRepository.findByMovieId(movieId);
         return shows.stream()
                 .map(show -> {
-                    List<ShowSeat> availableSeats = showSeatRepository.findByShowIdAndStatus(show.getId(), "AVAILABLE");
+                    List<ShowSeat> availableSeats = showSeatRepository.findByShowIdAndStatus(show.getId(), SeatStatus.AVAILABLE);
                     return mapToDto(show,availableSeats);
                 })
                 .collect(Collectors.toList());
@@ -89,7 +90,7 @@ public class ShowService {
         List<Show> shows=showRepository.findByMovie_IdAndScreen_Theater_City(movieId,city);
         return shows.stream()
                 .map(show -> {
-                    List<ShowSeat> availableSeats = showSeatRepository.findByShowIdAndStatus(show.getId(), "AVAILABLE");
+                    List<ShowSeat> availableSeats = showSeatRepository.findByShowIdAndStatus(show.getId(), SeatStatus.AVAILABLE);
                     return mapToDto(show,availableSeats);
                 })
                 .collect(Collectors.toList());
@@ -100,7 +101,7 @@ public class ShowService {
         List<Show> shows=showRepository.findByStartTimeBetween(startDate,endDate);
         return shows.stream()
                 .map(show -> {
-                    List<ShowSeat> availableSeats = showSeatRepository.findByShowIdAndStatus(show.getId(), "AVAILABLE");
+                    List<ShowSeat> availableSeats = showSeatRepository.findByShowIdAndStatus(show.getId(), SeatStatus.AVAILABLE);
                     return mapToDto(show,availableSeats);
                 })
                 .collect(Collectors.toList());

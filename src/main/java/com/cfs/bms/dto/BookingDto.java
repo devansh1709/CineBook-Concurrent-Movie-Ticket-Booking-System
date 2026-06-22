@@ -1,10 +1,11 @@
 package com.cfs.bms.dto;
 
+import com.cfs.bms.enums.BookingStatus;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.cglib.core.Local;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -18,8 +19,8 @@ public class BookingDto {
     private LocalDateTime bookingTime;
     private UserDto user;
     private ShowDto show;
-    private String status;
-    private double totalAmount;
+    private BookingStatus status;
+    private BigDecimal totalAmount;
     private List<ShowSeatDto> seats;
     private PaymentDto payment;
 

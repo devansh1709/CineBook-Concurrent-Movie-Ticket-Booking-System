@@ -1,10 +1,12 @@
 package com.cfs.bms.model;
 
+import com.cfs.bms.enums.BookingStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -33,11 +35,12 @@ public class Booking {
     @JoinColumn(name = "show_id",nullable = false)
     private Show show;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String status;
+    private BookingStatus status;
 
     @Column(nullable = false)
-    private Double totalAmount;
+    private BigDecimal totalAmount;
 
     @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL)
     private List<ShowSeat> showSeats;

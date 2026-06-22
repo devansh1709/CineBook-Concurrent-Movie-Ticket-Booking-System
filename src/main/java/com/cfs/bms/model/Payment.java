@@ -1,12 +1,13 @@
 package com.cfs.bms.model;
 
 
+import com.cfs.bms.enums.PaymentStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -24,7 +25,7 @@ public class Payment {
     private String transactionId;
 
     @Column(nullable = false)
-    private Double amount;
+    private BigDecimal amount;
 
     @Column(nullable = false)
     private LocalDateTime paymentTime;
@@ -32,8 +33,9 @@ public class Payment {
     @Column(nullable = false)
     private String paymentMethod;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String status;
+    private PaymentStatus status;
 
     @OneToOne(mappedBy = "payment")
     private Booking booking;

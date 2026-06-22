@@ -6,6 +6,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
+
 @Entity
 @Table(name = "seats")
 @Data
@@ -24,7 +26,7 @@ public class Seat {
     private String seatType;
 
     @Column(nullable = false)
-    private Double basePrice;
+    private BigDecimal basePrice;
 
     @ManyToOne
     @JoinColumn(name = "screen_id", nullable = false)

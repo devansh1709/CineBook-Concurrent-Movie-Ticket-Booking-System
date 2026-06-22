@@ -1,9 +1,11 @@
 package com.cfs.bms.dto;
 
+import com.cfs.bms.enums.PaymentStatus;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
@@ -12,8 +14,8 @@ import java.time.LocalDateTime;
 public class PaymentDto {
     private Long id;
     private String transactionId;
-    private Double amount;
+    private BigDecimal amount;
     private LocalDateTime paymentTime;
     private String paymentMethod;
-    private String status;
+    private PaymentStatus status;
 }

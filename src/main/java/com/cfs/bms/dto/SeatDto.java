@@ -3,7 +3,8 @@ package com.cfs.bms.dto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.context.annotation.Primary;
+
+import java.math.BigDecimal;
 
 @Data
 @NoArgsConstructor
@@ -13,5 +14,5 @@ public class SeatDto {
     private Long id;
     private String seatNumber;
     private String seatType;
-    private Double basePrice;
+    private BigDecimal basePrice;
 }
