@@ -93,14 +93,14 @@ public class BookingService {
         return mapToBookingDto(booking,seats);
     }
 
-    private BookingDto getBookingByNumber(String bookingNumber){
+    public BookingDto getBookingByNumber(String bookingNumber){
         Booking booking=bookingRepository.findByBookingNumber(bookingNumber)
                 .orElseThrow(()->new ResourceNotFoundException("Booking Not Found"));
         List<ShowSeat> seats = showSeatRepository.findByBookingId(booking.getId());
         return mapToBookingDto(booking,seats);
     }
 
-    private List<BookingDto> getBookingByUserId(Long userId)
+    public List<BookingDto> getBookingByUserId(Long userId)
     {
         List<Booking> bookings = bookingRepository.findByUserId(userId);
         return bookings.stream()

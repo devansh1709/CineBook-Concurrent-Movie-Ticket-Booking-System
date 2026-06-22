@@ -24,7 +24,7 @@ public class Booking {
     @Column(nullable = false, unique = true)
     private String bookingNumber;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private LocalDateTime bookingTime;
 
     @ManyToOne
