@@ -31,7 +31,7 @@ public class ShowSeat {
     private Double price;
 
     @ManyToOne
-    @JoinColumn(name = "booking_id", nullable = false)
+    @JoinColumn(name = "booking_id")
     private Booking booking;
 
 
