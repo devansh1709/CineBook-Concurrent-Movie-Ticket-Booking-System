@@ -1,6 +1,6 @@
 # 🎬 CineBook — Concurrent Movie Ticket Booking System
 
-A production-grade backend system for movie ticket booking built with **Spring Boot 4** and **Java 21**.  
+A backend system for movie ticket booking built with **Spring Boot 4** and **Java 21**.
 Focuses on correctness under concurrency, JWT-secured APIs, and clean layered architecture.
 
 ---
@@ -23,8 +23,9 @@ Focuses on correctness under concurrency, JWT-secured APIs, and clean layered ar
 ## Key Engineering Decisions
 
 ### 1. Pessimistic Locking — eliminates double-booking
-Concurrent seat selection is handled with `@Lock(LockModeType.PESSIMISTIC_WRITE)` on the seat query.  
-When two users try to book the same seat simultaneously, the second transaction waits for the first to complete — preventing double-booking at the database level.
+Concurrent seat selection is handled with `@Lock(LockModeType.PESSIMISTIC_WRITE)` on the seat query.
+When two users try to book the same seat simultaneously, the second transaction waits for the first to
+complete — preventing double-booking at the database level.
 
 ```java
 @Lock(LockModeType.PESSIMISTIC_WRITE)
@@ -42,12 +43,12 @@ AVAILABLE → LOCKED → BOOKED
 On cancellation: `BOOKED → AVAILABLE` (seat released back, booking reference cleared).
 
 ### 3. BigDecimal for all monetary values
-`totalAmount` and `price` use `BigDecimal` — never `double` or `float` — to prevent floating-point precision errors in financial calculations.
+`totalAmount` and `price` use `BigDecimal` — never `double` or `float` — to prevent floating-point
+precision errors in financial calculations.
 
 ### 4. JWT Authentication
-Stateless authentication via Bearer tokens. Passwords stored as BCrypt hashes.  
-Public endpoints: movie browsing, auth.  
-Protected endpoints: all booking operations.
+Stateless authentication via Bearer tokens. Passwords stored as BCrypt hashes.
+Public endpoints: movie browsing, auth. Protected endpoints: booking operations.
 
 ### 5. Global Exception Handling
 All errors return consistent JSON via `@ControllerAdvice`:
@@ -77,11 +78,19 @@ Movie (1) ───────────────────────�
                               User (1) ── (N) Booking
 ```
 
-**9 JPA Entities:** Movie · Theater · Screen · Show · Seat · ShowSeat · Booking · Payment · User
+**9 JPA entities:** Movie · Theater · Screen · Show · Seat · ShowSeat · Booking · Payment · User
 
 ---
 
 ## API Reference
+
+> ⚠️ **Only the endpoints below are actually wired up.** `ShowService`, `TheaterService`, and
+> `UserService` exist in the codebase and contain real logic (e.g. show lookup, seat availability
+> computation), but none of them are currently backed by a `@RestController`. There is no way to
+> create a `Show` or `Theater` through the API today — `bookingRequest.getShowId()` must reference a
+> row inserted directly into the database (e.g. via `docker/mysql/init.sql` seed data or a manual
+> insert). If you need working `/api/shows` and `/api/theaters` endpoints, that's the next thing to
+> build — see [Roadmap](#roadmap).
 
 ### Auth — Public
 | Method | Endpoint | Description |
@@ -113,24 +122,13 @@ Movie (1) ───────────────────────�
 | Method | Endpoint | Description |
 |---|---|---|
 | POST | `/api/movies` | Add a movie |
-| GET | `/api/movies` | Get all movies |
 | GET | `/api/movies/{id}` | Get movie by ID |
-
----
-
-### Shows — Public
-| Method | Endpoint | Description |
-|---|---|---|
-| POST | `/api/shows` | Create a show |
-| GET | `/api/shows/{id}` | Get show with available seats |
-| GET | `/api/shows` | Get all shows |
-| GET | `/api/shows/movie/{movieId}` | Shows by movie |
-| GET | `/api/shows/movie/{movieId}/city/{city}` | Shows by movie + city |
+| GET | `/api/movies` | Get all movies |
 
 ---
 
 ### Bookings — Requires JWT
-All booking endpoints require `Authorization: Bearer <token>` header.
+All booking endpoints require an `Authorization: Bearer <token>` header.
 
 | Method | Endpoint | Description |
 |---|---|---|
@@ -150,7 +148,7 @@ All booking endpoints require `Authorization: Bearer <token>` header.
 }
 ```
 
-**Response includes:** booking number · show details · movie · theater · seat list · payment info
+**Response includes:** booking number · seat list · payment info.
 
 ---
 
@@ -163,8 +161,8 @@ All booking endpoints require `Authorization: Bearer <token>` header.
 
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/YOUR_USERNAME/Movie-Ticket-Booking-System.git
-cd Movie-Ticket-Booking-System
+git clone https://github.com/devansh1709/CineBook-Concurrent-Movie-Ticket-Booking-System.git
+cd CineBook-Concurrent-Movie-Ticket-Booking-System
 ```
 
 ### 2. Create MySQL database
@@ -188,7 +186,15 @@ set JWT_SECRET=bms_super_secret_key_minimum_256_bits_long_use_a_real_secret
 mvn spring-boot:run
 ```
 
-Server starts at: `http://localhost:8081`
+Server starts at: `http://localhost:8080` (default Spring Boot port — no `server.port` override is
+set in `application.properties`, and both `Dockerfile` and `docker-compose.yml` also expose `8080`).
+
+### 5. Run with Docker Compose
+```bash
+docker compose up --build
+```
+This starts a MySQL 8.4 container plus the backend container, wired together with a healthcheck so the
+app waits for MySQL to be ready before starting.
 
 ---
 
@@ -197,11 +203,11 @@ Server starts at: `http://localhost:8081`
 Once the app is running, access interactive API documentation at:
 
 ```
-http://localhost:8081/swagger-ui.html
+http://localhost:8080/swagger-ui/index.html
 ```
 
-All endpoints are documented with request/response schemas.  
-Use the `/api/auth/login` endpoint first, copy the token, then click **Authorize** in Swagger and paste `Bearer <token>`.
+Use `/api/auth/login` first, copy the token, then click **Authorize** in Swagger and paste
+`Bearer <token>`.
 
 ---
 
@@ -238,9 +244,9 @@ src/main/java/com/cfs/bms/
 │   ├── AuthService.java            register + login logic
 │   ├── BookingService.java         core booking + cancel logic
 │   ├── MovieService.java
-│   ├── ShowService.java
-│   ├── TheaterService.java
-│   └── UserService.java
+│   ├── ShowService.java            show lookup/creation logic — not yet exposed via a controller
+│   ├── TheaterService.java         theater/screen logic — not yet exposed via a controller
+│   └── UserService.java            user lookup logic — not yet exposed via a controller
 ├── security/
 │   ├── JwtService.java             token generation + validation
 │   ├── JwtAuthFilter.java          Bearer token interceptor
@@ -265,10 +271,22 @@ src/main/java/com/cfs/bms/
 
 1. **Register** — `POST /api/auth/register` → copy the token from response
 2. **Add a Movie** — `POST /api/movies`
-3. **Create a Show** — `POST /api/shows`
-4. **View available seats** — `GET /api/shows/{id}`
-5. **Book tickets** — `POST /api/bookings` with `Authorization: Bearer <token>`
-6. **Cancel booking** — `DELETE /api/bookings/{id}` with `Authorization: Bearer <token>`
+3. **Seed a Show manually** — no `/api/shows` endpoint exists yet, so insert a `Show`/`ShowSeat` row
+   directly into MySQL (or via `docker/mysql/init.sql`) to get a `showId` and seat IDs to book against
+4. **Book tickets** — `POST /api/bookings` with `Authorization: Bearer <token>`
+5. **Cancel booking** — `DELETE /api/bookings/{id}` with `Authorization: Bearer <token>`
+
+---
+
+## Roadmap
+
+- [ ] Expose `ShowController` and `TheaterController` so shows/screens/showtimes can be created and
+      queried through the API instead of seeded directly in the database
+- [ ] Expose a read-only `UserController` endpoint (`GET /api/users/{id}`) — `UserService` already has
+      the logic
+- [ ] Auto-expire `LOCKED` seats that are never paid for (currently nothing releases a seat stuck in
+      `LOCKED` if a booking is abandoned mid-flow)
+- [ ] Pagination on `GET /api/movies`
 
 ---
 
