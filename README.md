@@ -276,4 +276,4 @@ src/main/java/com/cfs/bms/
 
 **Devansh Gupta**  
 B.Tech CSE 2027 · Pranveer Singh Institute of Technology, Kanpur  
-[LinkedIn](https://linkedin.com/in/YOUR_ID) · [GitHub](https://github.com/YOUR_ID) · [LeetCode](https://leetcode.com/YOUR_ID)
+[LinkedIn]([https://linkedin.com/in/YOUR_ID](https://www.linkedin.com/in/devansh-gupta-720960285/)) · [GitHub](https://github.com/devansh1709) · [LeetCode](https://leetcode.com/devansh1709)
